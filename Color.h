@@ -1,49 +1,27 @@
+//
+//  main.cpp
+//  Homework3
+//
+//  Created by Immanuel Amirtharaj on 11/21/15.
+//  Copyright © 2015 Immanuel Amirtharaj. All rights reserved.
+//
+
+// This has the Color class which has 4 parameters: The first 3 are the RGB values and the 4th value
+// (special)
+
 #ifndef _COLOR_H
 #define _COLOR_H
 
 class Color {
-	double red, green, blue, special;
 	
 	public:
 	
 	Color ();
 	
 	Color (double, double, double, double);
-	
-	// method functions
-	double getColorRed() {
-        return red;
-    }
     
-	double getColorGreen() {
-        return green;
-    }
-    
-	double getColorBlue() {
-        return blue;
-    }
-    
-	double getColorSpecial() {
-        return special;
-    }
-	
-	void setColorRed(double redValue)
-    {
-        red = redValue;
-    }
-    
-	void setColorGreen(double greenValue)
-    {
-        green = greenValue;
-    }
-    
-	void setColorBlue(double blueValue) {
-        blue = blueValue;
-    }
-    
-	void setColorSpecial(double specialValue) {
-        special = specialValue;
-    }
+    double red, green, blue, special;
+
 	
 	double brightness() {
 		return(red + green + blue)/3;
@@ -54,60 +32,61 @@ class Color {
 	}
 	
 	Color colorAdd(Color color) {
-		return Color (red + color.getColorRed(), green + color.getColorGreen(), blue + color.getColorBlue(), special);
+		return Color (red + color.red, green + color.green, blue + color.blue, special);
 	}
 	
 	Color colorMultiply(Color color) {
-		return Color (red*color.getColorRed(), green*color.getColorGreen(), blue*color.getColorBlue(), special);
+		return Color (red*color.red, green*color.green, blue*color.blue, special);
 	}
 	
-	Color colorAverage(Color color) {
-		return Color ((red + color.getColorRed())/2, (green + color.getColorGreen())/2, (blue + color.getColorBlue())/2, special);
-	}
+//	Color colorAverage(Color color) {
+//		return Color ((red + color.red)/2, (green + color.green)/2, (blue + color.blue)/2, special);
+//	}
     
     
 	// If needed this function clips the rgb of a color to 1
-	Color clip() {
-		double alllight = red + green + blue;
-		double excesslight = alllight - 3;
-		if (excesslight > 0) {
-			red = red + excesslight*(red/alllight);
-			green = green + excesslight*(green/alllight);
-			blue = blue + excesslight*(blue/alllight);
-		}
-        
-        
-		if (red > 1)
-        {
-            red = 1;
-        }
-        
-		if (green > 1)
-        {
-            green = 1;
-        }
-        
-		if (blue > 1)
-        {
-            blue = 1;
-        }
-        
-		if (red < 0)
-        {
-            red = 0;
-        }
-        
-		if (green < 0)
-        {
-            green = 0;
-        }
-        
-		if (blue < 0) {blue = 0;}
-		
-		return Color (red, green, blue, special);
-	}
+//	Color clip() {
+//		double alllight = red + green + blue;
+//		double excesslight = alllight - 3;
+//		if (excesslight > 0) {
+//			red = red + excesslight*(red/alllight);
+//			green = green + excesslight*(green/alllight);
+//			blue = blue + excesslight*(blue/alllight);
+//		}
+//        
+//        
+//		if (red > 1)
+//        {
+//            red = 1;
+//        }
+//        
+//		if (green > 1)
+//        {
+//            green = 1;
+//        }
+//        
+//		if (blue > 1)
+//        {
+//            blue = 1;
+//        }
+//        
+//		if (red < 0)
+//        {
+//            red = 0;
+//        }
+//        
+//		if (green < 0)
+//        {
+//            green = 0;
+//        }
+//        
+//		if (blue < 0) {blue = 0;}
+//		
+//		return Color (red, green, blue, special);
+//	}
 };
 
+// default initialization
 Color::Color ()
 {
 	red = 0.5;
@@ -115,6 +94,7 @@ Color::Color ()
 	blue = 0.5;
 }
 
+// initialize color with rgb and special value
 Color::Color (double r, double g, double b, double s)
 {
 	red = r;
