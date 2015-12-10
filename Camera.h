@@ -4,30 +4,38 @@
 #include "Vect.h"
 
 class Camera {
-	Vect campos, camdir, camright, camdown;
+	Vector campos, camdir, camright, camdown;
 	
 	public:
 	
 	Camera ();
 	
-	Camera (Vect, Vect, Vect, Vect);
+	Camera (Vector, Vector, Vector, Vector);
 	
 	// method functions
-	Vect getCameraPosition () { return campos; }
-	Vect getCameraDirection () { return camdir; }
-	Vect getCameraRight () { return camright; }
-	Vect getCameraDown () { return camdown; }
+	Vector getCameraPosition () {
+        return campos;
+    }
+	Vector getCameraDirection () {
+        return camdir;
+    }
+	Vector getCameraRight () {
+        return camright;
+    }
+	Vector getCameraDown () {
+        return camdown;
+    }
 	
 };
 
 Camera::Camera () {
-	campos = Vect(0,0,0);
-	camdir = Vect(0,0,1);
-	camright = Vect(0,0,0);
-	camdown = Vect(0,0,0);
+	campos = Vector(0,0,0);
+	camdir = Vector(0,0,1);
+	camright = Vector(0,0,0);
+	camdown = Vector(0,0,0);
 }
 
-Camera::Camera (Vect pos, Vect dir, Vect right, Vect down) {
+Camera::Camera (Vector pos, Vector dir, Vector right, Vector down) {
 	campos = pos;
 	camdir = dir;
 	camright = right;

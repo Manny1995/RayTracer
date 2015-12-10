@@ -13,8 +13,8 @@ class Object {
 	// method functions
 	virtual Color getColor () { return Color (0.0, 0.0, 0.0, 0); }
 	
-	virtual Vect getNormalAt(Vect intersection_position) {
-		return Vect (0, 0, 0);
+	virtual Vector getNormalAt(Vector intersection_position) {
+		return Vector (0, 0, 0);
 	}
 	
 	virtual double findIntersection(Ray ray) {

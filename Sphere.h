@@ -7,7 +7,7 @@
 #include "Color.h"
 
 class Sphere : public Object {
-	Vect center;
+	Vector center;
 	double radius;
 	Color color;
 	
@@ -15,31 +15,31 @@ class Sphere : public Object {
 	
 	Sphere ();
 	
-	Sphere (Vect, double, Color);
+	Sphere (Vector, double, Color);
 	
 	// method functions
-	Vect getSphereCenter () { return center; }
+	Vector getSphereCenter () { return center; }
 	double getSphereRadius () { return radius; }
 	virtual Color getColor () { return color; }
 	
-	virtual Vect getNormalAt(Vect point) {
+	virtual Vector getNormalAt(Vector point) {
 		// normal always points away from the center of a sphere
-		Vect normal_Vect = point.vectAdd(center.negative()).normalize();
+		Vector normal_Vect = point.vectAdd(center.negative()).normalize();
 		return normal_Vect;
 	}
 	
 	virtual double findIntersection(Ray ray) {
-		Vect ray_origin = ray.getRayOrigin();
+		Vector ray_origin = ray.getRayOrigin();
 		double ray_origin_x = ray_origin.getVectX();
 		double ray_origin_y = ray_origin.getVectY();
 		double ray_origin_z = ray_origin.getVectZ();
 		
-		Vect ray_direction = ray.getRayDirection();
+		Vector ray_direction = ray.getRayDirection();
 		double ray_direction_x = ray_direction.getVectX();
 		double ray_direction_y = ray_direction.getVectY();
 		double ray_direction_z = ray_direction.getVectZ();
 		
-		Vect sphere_center = center;
+		Vector sphere_center = center;
 		double sphere_center_x = sphere_center.getVectX();
 		double sphere_center_y = sphere_center.getVectY();
 		double sphere_center_z = sphere_center.getVectZ();
@@ -75,12 +75,12 @@ class Sphere : public Object {
 };
 
 Sphere::Sphere () {
-	center = Vect(0,0,0);
+	center = Vector(0,0,0);
 	radius = 1.0;
 	color = Color(0.5,0.5,0.5, 0);
 }
 
-Sphere::Sphere (Vect centerValue, double radiusValue, Color colorValue) {
+Sphere::Sphere (Vector centerValue, double radiusValue, Color colorValue) {
 	center = centerValue;
 	radius = radiusValue;
 	color = colorValue;
