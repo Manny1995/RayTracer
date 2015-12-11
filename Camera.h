@@ -1,45 +1,48 @@
+//
+//  Color.h
+//  Homework3
+//
+//  Created by Immanuel Amirtharaj on 11/21/15.
+//  Copyright © 2015 Immanuel Amirtharaj. All rights reserved.
+//
+
+// The Camera object simulates the user's viewing coordinates.  It is defined by the camera position, the
+// camera's direction (the direction the viewer is looking at), the right position which sets the horizontal
+// offset and the down position which sets the vertical offset
+
+
 #ifndef _Camera_H
 #define _Camera_H
 
 #include "Vect.h"
 
 class Camera {
-	Vector campos, camdir, camright, camdown;
 	
 	public:
 	
-	Camera ();
+    Vector position, direction, right, down;
+
+    
+    // Default constructor
+	Camera ()
+    {
+        position = Vector(0,0,0);
+        direction = Vector(0,0,1);
+        right = Vector(0,0,0);
+        down = Vector(0,0,0);
+    }
 	
-	Camera (Vector, Vector, Vector, Vector);
-	
-	// method functions
-	Vector getCameraPosition () {
-        return campos;
-    }
-	Vector getCameraDirection () {
-        return camdir;
-    }
-	Vector getCameraRight () {
-        return camright;
-    }
-	Vector getCameraDown () {
-        return camdown;
+    // Takes in parameters to initialize the camera with a position, direction, right, and down
+	Camera (Vector p, Vector d, Vector r, Vector _d)
+    {
+        position = p;
+        direction = d;
+        right = r;
+        down = _d;
     }
 	
 };
 
-Camera::Camera () {
-	campos = Vector(0,0,0);
-	camdir = Vector(0,0,1);
-	camright = Vector(0,0,0);
-	camdown = Vector(0,0,0);
-}
 
-Camera::Camera (Vector pos, Vector dir, Vector right, Vector down) {
-	campos = pos;
-	camdir = dir;
-	camright = right;
-	camdown = down;
-}
 
 #endif

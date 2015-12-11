@@ -121,7 +121,7 @@ Color getColorAt(Vector intersection_position, Vector intersecting_ray_direction
 	if (winning_object_color.special == 2) {
 		// checkered/tile floor pattern
 		
-		int squarePos = (int)floor(intersection_position.getVectX()) + (int)floor(intersection_position.getVectZ());
+		int squarePos = (int)floor(intersection_position.x) + (int)floor(intersection_position.z);
 		
 		if ((squarePos % 2) == 0) {
 //			 black tile
@@ -272,7 +272,7 @@ void render()
     Vector campos (3, 1.5, -4);
     
     Vector look_at (0, 0, 0);
-    Vector diff_btw (campos.getVectX() - look_at.getVectX(), campos.getVectY() - look_at.getVectY(), campos.getVectZ() - look_at.getVectZ());
+    Vector diff_btw (campos.x - look_at.x, campos.y - look_at.y, campos.z - look_at.z);
     
     Vector camdir = diff_btw.negative().normalize();
     Vector camright = Y.crossProduct(camdir).normalize();
@@ -345,7 +345,7 @@ void render()
                         }
                     }
 
-                    Vector cam_ray_origin = scene_cam.getCameraPosition();
+                    Vector cam_ray_origin = scene_cam.position;
                     Vector cam_ray_direction = camdir.vectAdd(camright.vectMult(xamnt - 0.5).vectAdd(camdown.vectMult(yamnt - 0.5))).normalize();
                     
                     Ray cam_ray (cam_ray_origin, cam_ray_direction);
@@ -425,9 +425,6 @@ int main (int argc, char *argv[]) {
             count++;
         }
     }
-		
-//	delete pixels, tempRed, tempGreen, tempBlue;
-    
     
     glutInit(&argc, argv);
     glutInitWindowPosition(0,0);

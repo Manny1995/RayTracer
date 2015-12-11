@@ -1,3 +1,14 @@
+//
+//  Sphere.h
+//  Homework3
+//
+//  Created by Immanuel Amirtharaj on 11/21/15.
+//  Copyright © 2015 Immanuel Amirtharaj. All rights reserved.
+//
+
+// A sphere is defined to be an object with a center and a radius.  It will have a color as well as
+// functions which manage intersections with rays
+
 #ifndef _SPHERE_H
 #define _SPHERE_H
 
@@ -13,9 +24,19 @@ class Sphere : public Object {
 	
 	public:
 	
-	Sphere ();
+	Sphere ()
+    {
+        center = Vector(0,0,0);
+        radius = 1.0;
+        color = Color(0.5,0.5,0.5, 0);
+    }
 	
-	Sphere (Vector, double, Color);
+	Sphere (Vector _center, double _radius, Color _color)
+    {
+        center = _center;
+        radius = _radius;
+        color = _color;
+    }
 	
 	// method functions
 	Vector getSphereCenter () { return center; }
@@ -28,30 +49,36 @@ class Sphere : public Object {
 		return normal_Vect;
 	}
 	
+    // This function takes in a ray as a parameter and returns an intersection if there is one
 	virtual double findIntersection(Ray ray) {
-		Vector ray_origin = ray.getRayOrigin();
-		double ray_origin_x = ray_origin.getVectX();
-		double ray_origin_y = ray_origin.getVectY();
-		double ray_origin_z = ray_origin.getVectZ();
+        
+        // origin vector
+		Vector r0 = ray.origin;
+		double r0x = r0.x;
+		double r0y = r0.y;
+		double r0z = r0.z;
 		
-		Vector ray_direction = ray.getRayDirection();
-		double ray_direction_x = ray_direction.getVectX();
-		double ray_direction_y = ray_direction.getVectY();
-		double ray_direction_z = ray_direction.getVectZ();
+        // direction of the ray
+		Vector rd = ray.direction;
+		double rdx = rd.x;
+		double rdy = rd.y;
+		double rdz = rd.z;
 		
-		Vector sphere_center = center;
-		double sphere_center_x = sphere_center.getVectX();
-		double sphere_center_y = sphere_center.getVectY();
-		double sphere_center_z = sphere_center.getVectZ();
+        // center of the sphere
+		Vector cc = center;
+		double cx = cc.x;
+		double cy = cc.y;
+        double cz = cc.z;
 		
-		double a = 1; // normalized
-		double b = (2*(ray_origin_x - sphere_center_x)*ray_direction_x) + (2*(ray_origin_y - sphere_center_y)*ray_direction_y) + (2*(ray_origin_z - sphere_center_z)*ray_direction_z);
-		double c = pow(ray_origin_x - sphere_center_x, 2) + pow(ray_origin_y - sphere_center_y, 2) + pow(ray_origin_z - sphere_center_z, 2) - (radius*radius);
+        // Values which are used to calculate the discriminant
+		double a = 1; // The ray direction is already normalized
+		double b = (2*(r0x - cx)*rdx) + (2*(r0y - cy)*rdy) + (2*(r0z - cz)*rdz);
+		double c = pow(r0x - cx, 2) + pow(r0y - cy, 2) + pow(r0z - cz, 2) - (radius*radius);
 		
 		double discriminant = b*b - 4*c;
 		
+        // Means that the ray intersects the sphere.  In this case we calculate the smallest intersection
 		if (discriminant > 0) {
-			/// the ray intersects the sphere
 			
 			// the first root
 			double root_1 = ((-1*b - sqrt(discriminant))/2) - 0.000001;
@@ -66,24 +93,11 @@ class Sphere : public Object {
 				return root_2;
 			}
 		}
+        // No intersection between ray and sphere
 		else {
-			// the ray missed the sphere
 			return -1;
 		}
 	}
-	
 };
-
-Sphere::Sphere () {
-	center = Vector(0,0,0);
-	radius = 1.0;
-	color = Color(0.5,0.5,0.5, 0);
-}
-
-Sphere::Sphere (Vector centerValue, double radiusValue, Color colorValue) {
-	center = centerValue;
-	radius = radiusValue;
-	color = colorValue;
-}
 
 #endif

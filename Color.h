@@ -38,18 +38,18 @@ class Color {
 	double brightness() {
 		return(red + green + blue)/3;
 	}
+    
+    // Takes in a color object as a parameter and adds it to the member color to return the
+    // added color
+    Color colorAdd(Color color) {
+        return Color (red + color.red, green + color.green, blue + color.blue, special);
+    }
 	
     // Takes in a scalar value as a parameter and multiplies it by the rgb color to return
     // the scaled color
 	Color colorScalar(double scalar)
     {
 		return Color (red*scalar, green*scalar, blue*scalar, special);
-	}
-	
-    // Takes in a color object as a parameter and adds it to the member color to return the
-    // added color
-	Color colorAdd(Color color) {
-		return Color (red + color.red, green + color.green, blue + color.blue, special);
 	}
 	
     // Takes in a color object as a parameter and multiplies each rgb value to the current object's

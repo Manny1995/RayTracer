@@ -6,7 +6,7 @@
 //  Copyright © 2015 Immanuel Amirtharaj. All rights reserved.
 //
 
-// A light object is defined by a vector as its position and its color
+// A light object is defined by a vector as its position and its color.
 
 #ifndef _Light_H
 #define _Light_H
@@ -35,20 +35,21 @@ class Light : public Source {
         position = p;
         color = c;
     }
-	    
+    
+    
+    // Returns the light color.  Necessary because only way to access the variables since this
+    // is inheriting
+    virtual Color getLightColor ()
+    {
+        return color;
+    }
+
     
     // Returns the light position.  Necessary because only way to access the variables since this
     // is inheriting
 	virtual Vector getLightPosition ()
     {
         return position;
-    }
-    
-    // Returns the light color.  Necessary because only way to access the variables since this
-    // is inheriting
-	virtual Color getLightColor ()
-    {
-        return color;
     }
 	
 };
