@@ -9,18 +9,11 @@
 // In this lab assignment we use ray tracing to render a few spheres on top of a textured surface.
 
 
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
 #include <vector>
 #include <cmath>
-#include <limits>
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 
 #include "Vect.h"
 #include "Ray.h"
@@ -39,7 +32,6 @@
 #include <GLUT/glut.h>
 
 #endif
-
 
 
 #define SCREEN_WIDTH 500
@@ -62,183 +54,185 @@ RGBType *pixels;
 
 
 // This function takes in a list of intersections and returns the intersection which is closest to the viewer
-int winningObjectIndex(vector<double> intersectionList) {
+int getIndexOfClosestObject(vector<double> intersectionList) {
 	// return the index of the winning intersection
 	int minIndex;
 	
     // no intersections in the list.  This means that there are no intersections in this pixel
-    if (intersectionList.size() == 0) {
-		// if there are no intersections
+    if (intersectionList.size() == 0)
+    {
 		return -1;
 	}
-    // 1 intersection in the list
-	else if (intersectionList.size() == 1) {
+    
+    // 1 intersection in the list, so we check if it is within the viewing frame.  If so, then return
+    // the index
+	else if (intersectionList.size() == 1)
+    {
 		if (intersectionList.at(0) > 0) {
-			// if that intersection is greater than zero then its our index of minimum value
 			return 0;
 		}
 		else {
-			// otherwise the only intersection value is negative
 			return -1;
 		}
 	}
+    
+    // More than one intersection.  In this case, we find the index for the closest object
 	else {
-		// otherwise there is more than one intersection
-		// first find the maximum value
-		
+        
+        // The maxmimum t value
 		double max = 0;
-		for (int i = 0; i < intersectionList.size(); i++) {
-			if (max < intersectionList.at(i)) {
-				max = intersectionList.at(i);
+        
+        // Iterate through the intersectino list and compare and change the maximum value
+		for (int i = 0; i < intersectionList.size(); i++)
+        {
+			if (max < intersectionList[i])
+            {
+				max = intersectionList[i];
 			}
 		}
 		
-		// then starting from the maximum value find the minimum positive value
+		// then starting from the maximum value find the minimum positive t value that is greater
+        // than 0
 		if (max > 0) {
 			// we only want positive intersections
-			for (int index = 0; index < intersectionList.size(); index++) {
-				if (intersectionList.at(index) > 0 && intersectionList.at(index) <= max) {
-					max = intersectionList.at(index);
+			for (int index = 0; index < intersectionList.size(); index++)
+            {
+				if (intersectionList[index] > 0 && intersectionList[index] <= max)
+                {
+					max = intersectionList[index];
 					minIndex = index;
 				}
 			}
-			
+            
 			return minIndex;
 		}
-		else {
-			// all the intersections were negative
-			return -1;
+        
+        // Did not find an intersection so report that it was not found
+		else
+        {
+            return -1;
 		}
 	}
 }
 
-// this is the ray tracing function
-Color getColorAt(Vector intersection_position, Vector intersecting_ray_direction, vector<Object*> scene_objects, int index_of_winning_object, vector<Source*> light_sources, double accuracy, double ambientlight) {
+// This function uses an intersection point, ray direction, closest index, and light source to calculate
+// the color of the pixel.  This is the mian tracing function
+Color getColorAt(Vector intersection, Vector rayDirection, vector<Object*> shapeList, int closestIndex, Light lightSource, double accuracy, double ambientlight) {
 	
-	Color winning_object_color = scene_objects.at(index_of_winning_object)->getColor();
-	Vector winning_object_normal = scene_objects.at(index_of_winning_object)->getNormalAt(intersection_position);
-	
-	if (winning_object_color.special == 2) {
-		// checkered/tile floor pattern
-		
-		int squarePos = (int)floor(intersection_position.x) + (int)floor(intersection_position.z);
-		
-		if ((squarePos % 2) == 0) {
-//			 black tile
-            winning_object_color.red = 0.0;
-            winning_object_color.green = 0.0;
-            winning_object_color.blue = 0.0;
-		}
-		else {
-			// white tile
-            winning_object_color.red = 1;
-            winning_object_color.green = 1;
-            winning_object_color.blue = 1;
-		}
+	Color closestColor = shapeList[closestIndex]->getColor();
+	Vector normal = shapeList.at(closestIndex)->getNormalAt(intersection);
+    
+    // If the first object's special attribute is set to 2 we know it is a plane)
+	if (closestColor.special == 2) {
+        
+            closestColor.red = 0.5;
+            closestColor.green = 0.5;
+            closestColor.blue = 0.5;
+
 	}
 	
-	Color final_color = winning_object_color.colorScalar(ambientlight);
+	Color pixelColor = closestColor.colorScalar(ambientlight);
 	
-	if (winning_object_color.special > 0 && winning_object_color.special <= 1) {
-		// reflection from objects with specular intensity
-		double dot1 = winning_object_normal.dotProduct(intersecting_ray_direction.negative());
-		Vector scalar1 = winning_object_normal.vectMult(dot1);
-		Vector add1 = scalar1.vectAdd(intersecting_ray_direction);
+    // If the special coefficient is between 0 and 1, this is a reflective surface.  This means we
+    // have to calculate the reflection for this part
+	if (closestColor.special > 0 && closestColor.special <= 1)
+    {
+        
+		// Vector arithmetic to calculate the reflection ray
+		double dot1 = normal.dotProduct(rayDirection.negative());
+		Vector scalar1 = normal.vectMult(dot1);
+		Vector add1 = scalar1.vectAdd(rayDirection);
 		Vector scalar2 = add1.vectMult(2);
-		Vector add2 = intersecting_ray_direction.negative().vectAdd(scalar2);
-		Vector reflection_direction = add2.normalize();
+		Vector add2 = rayDirection.negative().vectAdd(scalar2);
+		Vector reflectionDirection = add2.normalize();
 		
-		Ray reflection_ray (intersection_position, reflection_direction);
+		Ray reflectionRay = Ray(intersection, reflectionDirection);
 		
-		// determine what the ray intersects with first
+		// Create a vector of intersections and then iterate through shapes and save the intersections
 		vector<double> reflection_intersections;
 		
-		for (int reflection_index = 0; reflection_index < scene_objects.size(); reflection_index++)
+		for (int rIndex = 0; rIndex < shapeList.size(); rIndex++)
         {
-			reflection_intersections.push_back(scene_objects.at(reflection_index)->findIntersection(reflection_ray));
+			reflection_intersections.push_back(shapeList[rIndex]->findIntersection(reflectionRay));
 		}
 		
-		int index_of_winning_object_with_reflection = winningObjectIndex(reflection_intersections);
+        // Gets the closest intersection of the reflected ray and the surface
+		int closestIntersection = getIndexOfClosestObject(reflection_intersections);
 		
-		if (index_of_winning_object_with_reflection != -1) {
-			// reflection ray missed everthing else
-			if (reflection_intersections.at(index_of_winning_object_with_reflection) > accuracy) {
-				// determine the position and direction at the point of intersection with the reflection ray
-				// the ray only affects the color if it reflected off something
+        // if closestIntersection != -1, there is an intersection.
+		if (closestIntersection != -1) {
+            
+			if (reflection_intersections[closestIntersection] > accuracy)
+            {
 				
-				Vector reflection_intersection_position = intersection_position.vectAdd(reflection_direction.vectMult(reflection_intersections.at(index_of_winning_object_with_reflection)));
-				Vector reflection_intersection_ray_direction = reflection_direction;
+				Vector reflectionIntersection = intersection.vectAdd(reflectionDirection.vectMult(reflection_intersections[closestIntersection]));
 				
                 //recursively getting color
-				Color reflection_intersection_color = getColorAt(reflection_intersection_position, reflection_intersection_ray_direction, scene_objects, index_of_winning_object_with_reflection, light_sources, accuracy, ambientlight);
+				Color reflectionColor = getColorAt(reflectionIntersection, reflectionDirection, shapeList, closestIntersection, lightSource, accuracy, ambientlight);
 				
-				final_color = final_color.colorAdd(reflection_intersection_color.colorScalar(winning_object_color.special));
+				pixelColor = pixelColor.colorAdd(reflectionColor.colorScalar(closestColor.special));
 			}
 		}
 	}
 	
-	for (int light_index = 0; light_index < light_sources.size(); light_index++)
-    {
-		Vector light_direction = light_sources.at(light_index)->getLightPosition().vectAdd(intersection_position.negative()).normalize();
-		
-		float cosine_angle = winning_object_normal.dotProduct(light_direction);
-		
-		if (cosine_angle > 0) {
-			// test for shadows
-			bool shadowed = false;
-			
-			Vector distance_to_light = light_sources.at(light_index)->getLightPosition().vectAdd(intersection_position.negative()).normalize();
-			float distance_to_light_magnitude = distance_to_light.magnitude();
-			
-			Ray shadow_ray (intersection_position, light_sources.at(light_index)->getLightPosition().vectAdd(intersection_position.negative()).normalize());
-			
-			vector<double> secondary_intersections;
-			
-			for (int object_index = 0; object_index < scene_objects.size() && shadowed == false; object_index++) {
-				secondary_intersections.push_back(scene_objects.at(object_index)->findIntersection(shadow_ray));
-			}
-			
-			for (int c = 0; c < secondary_intersections.size(); c++)
-            {
-				if (secondary_intersections.at(c) > accuracy) {
-					if (secondary_intersections.at(c) <= distance_to_light_magnitude) {
-						shadowed = true;
-					}
-				}
-				break;
-			}
-			
-			if (shadowed == false)
-            {
-				final_color = final_color.colorAdd(winning_object_color.colorMultiply(light_sources.at(light_index)->getLightColor()).colorScalar(cosine_angle));
-				
-				if (winning_object_color.special > 0 && winning_object_color.special <= 1) {
-					// special [0-1]
-					double dot1 = winning_object_normal.dotProduct(intersecting_ray_direction.negative());
-					Vector scalar1 = winning_object_normal.vectMult(dot1);
-					Vector add1 = scalar1.vectAdd(intersecting_ray_direction);
-					Vector scalar2 = add1.vectMult(2);
-					Vector add2 = intersecting_ray_direction.negative().vectAdd(scalar2);
-					Vector reflection_direction = add2.normalize();
-					
-					double specular = reflection_direction.dotProduct(light_direction);
-					if (specular > 0) {
-						specular = pow(specular, 10);
-						final_color = final_color.colorAdd(light_sources.at(light_index)->getLightColor().colorScalar(specular*winning_object_color.special));
-					}
-				}
-				
-			}
-			
-		}
-	}
-	
-//	return final_color.clip();
-    return final_color;
+
+    Vector light_direction = lightSource.getLightPosition().vectAdd(intersection.negative()).normalize();
+    
+    // This cosine angle is used for diffuse shading
+    float cosine_angle = normal.dotProduct(light_direction);
+    
+    if (cosine_angle > 0) {
+        // test for shadows
+        bool shadowed = false;
+        
+        // Create a new Vector
+        Vector distance_to_light = lightSource.getLightPosition().vectAdd(intersection.negative()).normalize();
+        float distance_to_light_magnitude = distance_to_light.magnitude();
+        
+        Ray shadowRay (intersection, lightSource.getLightPosition().vectAdd(intersection.negative()).normalize());
+        
+        vector<double> secondary_intersections;
+        
+        for (int object_index = 0; object_index < shapeList.size() && shadowed == false; object_index++) {
+            secondary_intersections.push_back(shapeList.at(object_index)->findIntersection(shadowRay));
+        }
+        
+        for (int c = 0; c < secondary_intersections.size(); c++)
+        {
+            if (secondary_intersections[c] > accuracy) {
+                if (secondary_intersections.at(c) <= distance_to_light_magnitude) {
+                    shadowed = true;
+                }
+            }
+            break;
+        }
+        
+        if (shadowed == false)
+        {
+            pixelColor = pixelColor.colorAdd(closestColor.colorMultiply(lightSource.getLightColor()).colorScalar(cosine_angle));
+            
+            if (closestColor.special > 0 && closestColor.special <= 1) {
+                // special [0-1]
+                double dot1 = normal.dotProduct(rayDirection.negative());
+                Vector scalar1 = normal.vectMult(dot1);
+                Vector add1 = scalar1.vectAdd(rayDirection);
+                Vector scalar2 = add1.vectMult(2);
+                Vector add2 = rayDirection.negative().vectAdd(scalar2);
+                Vector reflectionDirection = add2.normalize();
+                
+                double specular = reflectionDirection.dotProduct(light_direction);
+                if (specular > 0) {
+                    specular = pow(specular, 10);
+                    pixelColor = pixelColor.colorAdd(lightSource.getLightColor().colorScalar(specular*closestColor.special));
+                }
+            }
+            
+        }
+        
+    }
+
+    return pixelColor;
 }
-
-int thisone;
-
 
 void display(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -246,16 +240,14 @@ void display(void) {
     glutSwapBuffers();
 }
 
-void render()
+void initTracer()
 {
-    int dpi = 72;
     int width = SCREEN_WIDTH;
     int height = SCREEN_HEIGHT;
     int n = width*height;
     pixels = new RGBType[n];
     
     int aadepth = 1;
-    double aathreshold = 0.1;
     double aspectratio = (double)width/(double)height;
     double ambientlight = 0.2;
     double accuracy = 0.00000001;
@@ -265,8 +257,7 @@ void render()
     Vector Y (0,1,0);
     Vector Z (0,0,1);
     
-    Vector new_sphere_location (1.75, 0.25, 0);
-    Vector new_sphere_location2 (-3, 0.25, 0);
+
     
     
     Vector campos (3, 1.5, -4);
@@ -279,30 +270,32 @@ void render()
     Vector camdown = camright.crossProduct(camdir);
     Camera scene_cam (campos, camdir, camright, camdown);
     
-    Color white_light (1.0, 1.0, 1.0, 0);
-    Color pretty_green (0.5, 1.0, 0.5, 0.3);
-    Color maroon (0.5, 0.25, 0.25, 0);
+
     Color tile_floor (1, 1, 1, 2);
     Color gray (0.5, 0.5, 0.5, 0);
     Color black (0.0, 0.0, 0.0, 0);
-    Color transparent_black (0.0, 0.0, 0.0, 0.5);
     
-    Vector light_position (-7,10,-10);
-    Light scene_light (light_position, white_light);
-    vector<Source*> light_sources;
-    light_sources.push_back(dynamic_cast<Source*>(&scene_light));
+    Light light (Vector(7, 10, -8), Color(1.0, 1.0, 1.0, 0));
+
+    // The container which holds all the objects in the scene
+    vector<Object*> shapesList;
+
+    // Initialize 3 spheres and add them to the vector of objects
+    Sphere sphere1 (Vector(0, 0.2, 0.5), 1, Color(0.5, 0.5, 1.0, 0));
+    Sphere sphere2 (Vector(1.7, 1.5, -0.5), 0.5, Color(0.5, 1.0, 1.0, 0.3));
+    Sphere sphere3 (Vector(-3, 0.25, 0), 1, Color(1.0, 0.5, 0.5, 0.5));
+    Sphere sphere4 (Vector(2.8, 0.5, -0.5), 1, Color(1.0, 1.0, 0.5, 0));
+
+
+    Plane floor (Y, -1, tile_floor);
     
-    // scene objects
-    Sphere scene_sphere (O, 1, pretty_green);
-    Sphere scene_sphere2 (new_sphere_location, 0.5, maroon);
-    Sphere scene_sphere3 (new_sphere_location2, 1, transparent_black);
-    
-    Plane scene_plane (Y, -1, tile_floor);
-    vector<Object*> scene_objects;
-    scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere));
-    scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere2));
-    scene_objects.push_back(dynamic_cast<Object*>(&scene_sphere3));
-    scene_objects.push_back(dynamic_cast<Object*>(&scene_plane));
+    // Add objects to the vector (dynamic cast to superclass)
+    shapesList.push_back(dynamic_cast<Object*>(&sphere1));
+    shapesList.push_back(dynamic_cast<Object*>(&sphere2));
+    shapesList.push_back(dynamic_cast<Object*>(&sphere3));
+    shapesList.push_back(dynamic_cast<Object*>(&sphere4));
+
+    shapesList.push_back(dynamic_cast<Object*>(&floor));
     
     int thisone, aa_index;
     double xamnt, yamnt;
@@ -321,8 +314,6 @@ void render()
                 for (int aay = 0; aay < aadepth; aay++) {
                     
                     aa_index = aay*aadepth + aax;
-                    
-                    srand(time(0));
                     
                     // create the ray from the camera to this pixel
                     if (aadepth == 1) {
@@ -352,11 +343,11 @@ void render()
                     
                     vector<double> intersections;
                     
-                    for (int index = 0; index < scene_objects.size(); index++) {
-                        intersections.push_back(scene_objects.at(index)->findIntersection(cam_ray));
+                    for (int index = 0; index < shapesList.size(); index++) {
+                        intersections.push_back(shapesList[index]->findIntersection(cam_ray));
                     }
                     
-                    int index_of_winning_object = winningObjectIndex(intersections);
+                    int index_of_winning_object = getIndexOfClosestObject(intersections);
                     
                     if (index_of_winning_object == -1) {
                         // set the backgroung black
@@ -370,9 +361,9 @@ void render()
                             // determine the position and direction vectors at the point of intersection
                             
                             Vector intersection_position = cam_ray_origin.vectAdd(cam_ray_direction.vectMult(intersections.at(index_of_winning_object)));
-                            Vector intersecting_ray_direction = cam_ray_direction;
+                            Vector rayDirection = cam_ray_direction;
                             
-                            Color intersection_color = getColorAt(intersection_position, intersecting_ray_direction, scene_objects, index_of_winning_object, light_sources, accuracy, ambientlight);
+                            Color intersection_color = getColorAt(intersection_position, rayDirection, shapesList, index_of_winning_object, light, accuracy, ambientlight);
                             
                             tempRed[aa_index] = intersection_color.red;
                             tempGreen[aa_index] = intersection_color.green;
@@ -409,9 +400,12 @@ void render()
     
 }
 
+
+// This is the main function which first renders the image and then updates the pixel array.
+// Then it initializes and creates a window to show the scene.
 int main (int argc, char *argv[]) {
 	
-    render();
+    initTracer();
     // Now that we have the array of pixels
     int count = 0;
     for (int i = 0; i < SCREEN_WIDTH; i++)
@@ -430,7 +424,7 @@ int main (int argc, char *argv[]) {
     glutInitWindowPosition(0,0);
     glutInitWindowSize(SCREEN_WIDTH,SCREEN_HEIGHT);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutCreateWindow("Raytracing");
+    glutCreateWindow("Raytracing Assignment");
     glutDisplayFunc(display);
     glutMainLoop();
 	return 0;
